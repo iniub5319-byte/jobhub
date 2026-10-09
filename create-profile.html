@@ -1,0 +1,259 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post a Job - JobHub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <a href="dashboard.html" class="logo">JobHub</a>
+
+    <div class="nav-links">
+        <a href="dashboard.html">Dashboard</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <a href="contact.html">Contact Us</a>
+    </div>
+
+</nav>
+
+<section class="page">
+
+    <div class="form-container">
+
+        <div class="form-card">
+
+            <h1>Post a Job</h1>
+
+            <p style="color:#64748b;margin-bottom:25px;">
+                Tell freelancers what you need.
+            </p>
+
+            <div id="message" class="message"></div>
+
+            <form id="jobForm">
+
+                <div class="form-group">
+                    <label>Job Title</label>
+                    <input
+                        type="text"
+                        id="title"
+                        placeholder="e.g. Build a professional website"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+
+                    <label>Category</label>
+
+                    <select id="category" required>
+
+                        <option value="">
+                            Select category
+                        </option>
+
+                        <option value="Web Development">
+                            Web Development
+                        </option>
+
+                        <option value="Web Design">
+                            Web Design
+                        </option>
+
+                        <option value="Mobile Development">
+                            Mobile Development
+                        </option>
+
+                        <option value="Graphic Design">
+                            Graphic Design
+                        </option>
+
+                        <option value="Writing">
+                            Writing
+                        </option>
+
+                        <option value="Marketing">
+                            Marketing
+                        </option>
+
+                        <option value="Other">
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="grid grid-2">
+
+                    <div class="form-group">
+                        <label>Budget</label>
+                        <input
+                            type="number"
+                            id="budget"
+                            min="0"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Currency</label>
+
+                        <select id="currency" required>
+                            <option value="NGN">NGN</option>
+                            <option value="USD">USD</option>
+                            <option value="GBP">GBP</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Deadline</label>
+
+                    <input
+                        type="date"
+                        id="deadline"
+                        required
+                    >
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Job Description</label>
+
+                    <textarea
+                        id="description"
+                        placeholder="Describe the project..."
+                        required
+                    ></textarea>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary form-submit"
+                >
+                    Post Job
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+<script>
+
+const API = "http://localhost:5000";
+
+const user = JSON.parse(
+    localStorage.getItem("jobhubUser") || "null"
+);
+
+if (!user) {
+    window.location.href = "login.html";
+}
+
+if (user && user.role !== "client") {
+
+    document.querySelector(".form-card").innerHTML = `
+        <div class="message error" style="display:block;">
+            Only clients can post jobs.
+        </div>
+    `;
+}
+
+document
+    .getElementById("jobForm")
+    ?.addEventListener("submit", async function(e) {
+
+        e.preventDefault();
+
+        const message = document.getElementById("message");
+
+        try {
+
+            const response = await fetch(
+                `${API}/api/jobs`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        title:
+                            document.getElementById("title").value.trim(),
+
+                        category:
+                            document.getElementById("category").value,
+
+                        budget:
+                            document.getElementById("budget").value,
+
+                        currency:
+                            document.getElementById("currency").value,
+
+                        deadline:
+                            document.getElementById("deadline").value,
+
+                        description:
+                            document.getElementById("description").value.trim(),
+
+                        clientName:
+                            user.name,
+
+                        clientEmail:
+                            user.email
+
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Server error creating job."
+                );
+            }
+
+            message.className = "message success";
+            message.textContent =
+                "Job posted successfully!";
+
+            document.getElementById("jobForm").reset();
+
+            setTimeout(() => {
+                window.location.href = "jobs.html";
+            }, 1200);
+
+        } catch (error) {
+
+            message.className = "message error";
+            message.textContent = error.message;
+        }
+
+    });
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - JobHub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="logo">JobHub</a>
+
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="login.html">Login</a>
+        <a href="terms.html">Terms & Conditions</a>
+    </div>
+</nav>
+
+<section class="auth-page">
+
+    <div class="auth-card">
+
+        <h1>Create Account</h1>
+
+        <p class="subtitle">
+            Join JobHub today.
+        </p>
+
+        <div id="message" class="message"></div>
+
+        <form id="registerForm">
+
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="name" required>
+            </div>
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" minlength="6" required>
+            </div>
+
+            <div class="form-group">
+                <label>Account Type</label>
+
+                <select id="role" required>
+                    <option value="">Select account type</option>
+                    <option value="freelancer">Freelancer</option>
+                    <option value="client">Client</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary form-submit" type="submit">
+                Create Account
+            </button>
+
+            <label>
+    <input type="checkbox" id="terms" required>
+    I agree to the <a href="terms.html" target="_blank">Terms & Conditions</a>
+</label>
+
+        </form>
+
+        <div class="auth-footer">
+            Already have an account?
+            <a href="login.html">Login</a>
+        </div>
+
+    </div>
+
+</section>
+
+<script>
+const API = "http://localhost:5000";
+
+document.getElementById("registerForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const message = document.getElementById("message");
+
+    const user = {
+        name: document.getElementById("name").value.trim(),
+        email: document.getElementById("email").value.trim(),
+        password: document.getElementById("password").value,
+        role: document.getElementById("role").value
+    };
+
+    try {
+        const response = await fetch(`${API}/api/register`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(user)
+        });
+
+        const text = await response.text();
+
+        let data;
+
+        try {
+            data = JSON.parse(text);
+        } catch {
+            throw new Error("The backend returned an invalid response.");
+        }
+
+        if (!response.ok) {
+            throw new Error(data.message || "Registration failed.");
+        }
+
+        message.className = "message success";
+        message.textContent = "Account created successfully! Redirecting to login...";
+
+        setTimeout(() => {
+            window.location.href = "login.html";
+        }, 1500);
+
+    } catch (error) {
+        message.className = "message error";
+        message.textContent = error.message;
+    }
+});
+</script>
+
+</body>
+</html>

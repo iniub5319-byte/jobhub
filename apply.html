@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply - JobHub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <a href="index.html" class="logo">JobHub</a>
+
+    <div class="nav-links">
+        <a href="jobs.html">Jobs</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <a href="contact.html">Contact Us</a>
+    </div>
+
+</nav>
+
+<section class="page">
+
+    <div class="form-container">
+
+        <div class="form-card">
+
+            <h1>Apply for Job</h1>
+
+            <p id="jobTitle" style="color:#64748b;margin-bottom:25px;">
+                Loading job...
+            </p>
+
+            <div id="message" class="message"></div>
+
+            <form id="applicationForm">
+
+                <div class="form-group">
+
+                    <label>Cover Letter</label>
+
+                    <textarea
+                        id="coverLetter"
+                        placeholder="Tell the client why you are the right person for this job..."
+                        required
+                    ></textarea>
+
+                </div>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary form-submit"
+                >
+                    Submit Application
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</section>
+
+<script>
+
+const API = "http://localhost:5000";
+
+const user = JSON.parse(
+    localStorage.getItem("jobhubUser") || "null"
+);
+
+const params = new URLSearchParams(window.location.search);
+const jobId = params.get("id");
+
+if (!user) {
+    window.location.href = "login.html";
+}
+
+if (user && user.role !== "freelancer") {
+
+    document.querySelector(".form-card").innerHTML = `
+        <div class="message error" style="display:block;">
+            Only freelancers can apply for jobs.
+        </div>
+    `;
+}
+
+async function loadJob() {
+
+    if (!jobId) return;
+
+    try {
+
+        const response = await fetch(
+            `${API}/api/jobs/${jobId}`
+        );
+
+        const job = await response.json();
+
+        if (!response.ok) {
+            throw new Error(job.message || "Job not found.");
+        }
+
+        document.getElementById("jobTitle").textContent =
+            `Applying for: ${job.title}`;
+
+    } catch (error) {
+
+        document.getElementById("jobTitle").textContent =
+            error.message;
+    }
+}
+
+document
+    .getElementById("applicationForm")
+    ?.addEventListener("submit", async function(e) {
+
+        e.preventDefault();
+
+        const message = document.getElementById("message");
+
+        try {
+
+            const response = await fetch(
+                `${API}/api/applications`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+
+                        jobId: jobId,
+
+                        freelancerId: user.id,
+
+                        freelancerName: user.name,
+
+                        freelancerEmail: user.email,
+
+                        coverLetter:
+                            document.getElementById("coverLetter").value.trim()
+
+                    })
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Application failed."
+                );
+            }
+
+            message.className = "message success";
+            message.textContent =
+                "Application submitted successfully!";
+
+            document.getElementById("applicationForm").reset();
+
+        } catch (error) {
+
+            message.className = "message error";
+            message.textContent = error.message;
+        }
+
+    });
+
+loadJob();
+
+</script>
+
+</body>
+</html>

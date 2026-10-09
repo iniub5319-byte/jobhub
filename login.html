@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - JobHub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="logo">JobHub</a>
+
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="register.html">Register</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <a href="contact.html">Contact Us</a>
+    </div>
+</nav>
+
+<section class="auth-page">
+
+    <div class="auth-card">
+
+        <h1>Welcome Back</h1>
+
+        <p class="subtitle">
+            Login to your JobHub account.
+        </p>
+
+        <div id="message" class="message"></div>
+
+        <form id="loginForm">
+
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="password" required>
+            </div>
+
+
+            <a href="forgot-password.html">
+    Forgot Password?
+</a>
+
+
+            <button type="submit" class="btn btn-primary form-submit">
+                Login
+            </button>
+
+            <label>
+    <input type="checkbox" id="terms" required>
+    I agree to the <a href="terms.html" target="_blank">Terms & Conditions</a>
+</label>
+
+        </form>
+
+        <div class="auth-footer">
+            Don't have an account?
+            <a href="register.html">Create one</a>
+        </div>
+
+    </div>
+
+</section>
+
+<script>
+const API = "http://localhost:5000";
+
+document.getElementById("loginForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const message = document.getElementById("message");
+
+    try {
+        const response = await fetch(`${API}/api/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: document.getElementById("email").value.trim(),
+                password: document.getElementById("password").value
+            })
+        });
+
+        const text = await response.text();
+
+        let data;
+
+        try {
+            data = JSON.parse(text);
+        } catch {
+            throw new Error(
+                "The backend returned an invalid response. Make sure JobHub server is running on port 5000."
+            );
+        }
+
+        if (!response.ok) {
+            if (data.suspended) {
+                throw new Error(
+                    "Your account is suspended. Reason: " +
+                    (data.reason || "No reason provided.")
+                );
+            }
+
+            throw new Error(data.message || "Login failed.");
+        }
+
+        localStorage.setItem(
+            "jobhubUser",
+            JSON.stringify(data.user)
+        );
+
+        localStorage.setItem(
+            "jobhubUserId",
+            data.user.id
+        );
+
+        message.className = "message success";
+        message.textContent = "Login successful!";
+
+        setTimeout(() => {
+
+            if (data.user.role === "admin") {
+                window.location.href = "user-dashboard.html";
+            } else {
+                window.location.href = "dashboard.html";
+            }
+
+        }, 700);
+
+    } catch (error) {
+        message.className = "message error";
+        message.textContent = error.message;
+    }
+});
+</script>
+
+</body>
+</html>

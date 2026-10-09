@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Admin Dashboard - JobHub</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<header class="navbar">
+
+    <div class="logo">
+        JobHub Admin
+    </div>
+
+    <nav>
+
+        <a href="index.html">
+            Home
+        </a>
+
+        <a href="jobs.html">
+            Jobs
+        </a>
+
+        <a href="terms.html">Terms & Conditions</a>
+        
+
+        <a href="#"
+           id="logoutBtn">
+            Logout
+        </a>
+
+    </nav>
+
+</header>
+
+
+<main class="container">
+
+
+<section class="page-title">
+
+    <h1>
+        Admin Dashboard
+    </h1>
+
+    <p>
+        Manage JobHub users.
+    </p>
+
+</section>
+
+
+<section class="stats-grid">
+
+
+<div class="stat-card">
+
+    <h3>
+        Total Users
+    </h3>
+
+    <p id="totalUsers">
+        0
+    </p>
+
+</div>
+
+
+<div class="stat-card">
+
+    <h3>
+        Active Users
+    </h3>
+
+    <p id="activeUsers">
+        0
+    </p>
+
+</div>
+
+
+<div class="stat-card">
+
+    <h3>
+        Suspended Users
+    </h3>
+
+    <p id="suspendedUsers">
+        0
+    </p>
+
+</div>
+
+
+</section>
+
+
+<div style="margin:20px 0;">
+
+    <button
+        class="btn"
+        onclick="loadDashboard()"
+    >
+        Refresh Users
+    </button>
+
+</div>
+
+
+<div id="message"></div>
+
+
+<section class="card">
+
+    <h2>
+        All Users
+    </h2>
+
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Name
+                    </th>
+
+                    <th>
+                        Email
+                    </th>
+
+                    <th>
+                        Role
+                    </th>
+
+                    <th>
+                        Status
+                    </th>
+
+                    <th>
+                        Joined
+                    </th>
+
+                    <th>
+                        Actions
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="usersTable">
+
+                <tr>
+
+                    <td colspan="6">
+                        Loading users...
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+
+</main>
+
+
+<script>
+
+
+const API_URL =
+    "http://localhost:5000";
+
+
+const user =
+    JSON.parse(
+        localStorage.getItem(
+            "jobhubUser"
+        )
+    );
+
+
+const adminId =
+    localStorage.getItem(
+        "jobhubUserId"
+    );
+
+
+if (
+    !user ||
+    user.role !== "admin" ||
+    !adminId
+) {
+
+    alert(
+        "Admin login required."
+    );
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+// =====================================
+// ESCAPE HTML
+// =====================================
+
+function escapeHTML(value) {
+
+    return String(value || "")
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+// =====================================
+// LOAD DASHBOARD
+// =====================================
+
+async function loadDashboard() {
+
+    await loadStats();
+
+    await loadUsers();
+
+}
+
+
+// =====================================
+// LOAD STATS
+// =====================================
+
+async function loadStats() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/admin/stats`,
+                {
+                    headers: {
+                        "x-user-id":
+                            adminId
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message
+            );
+
+        }
+
+
+        document
+            .getElementById(
+                "totalUsers"
+            )
+            .textContent =
+            data.total;
+
+
+        document
+            .getElementById(
+                "activeUsers"
+            )
+            .textContent =
+            data.active;
+
+
+        document
+            .getElementById(
+                "suspendedUsers"
+            )
+            .textContent =
+            data.suspended;
+
+
+    } catch (error) {
+
+        showMessage(
+            error.message,
+            "error"
+        );
+
+    }
+
+}
+
+
+// =====================================
+// LOAD USERS
+// =====================================
+
+async function loadUsers() {
+
+    const table =
+        document.getElementById(
+            "usersTable"
+        );
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/admin/users`,
+                {
+                    headers: {
+                        "x-user-id":
+                            adminId
+                    }
+                }
+            );
+
+
+        const users =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                users.message
+            );
+
+        }
+
+
+        table.innerHTML = "";
+
+
+        if (!users.length) {
+
+            table.innerHTML = `
+                <tr>
+                    <td colspan="6">
+                        No users found.
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+
+        users.forEach(
+            currentUser => {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                const joined =
+                    currentUser.createdAt
+                        ? new Date(
+                            currentUser.createdAt
+                        ).toLocaleDateString()
+                        : "-";
+
+
+                let actions = "";
+
+
+                if (
+                    currentUser.role ===
+                    "admin"
+                ) {
+
+                    actions = `
+                        <strong>
+                            Admin
+                        </strong>
+                    `;
+
+                } else if (
+                    currentUser.status ===
+                    "suspended"
+                ) {
+
+                    actions = `
+
+                        <button
+                            class="btn"
+                            onclick="activateUser('${currentUser.id}')"
+                        >
+                            Activate
+                        </button>
+
+                        <button
+                            class="btn danger"
+                            onclick="deleteUser('${currentUser.id}')"
+                        >
+                            Delete
+                        </button>
+
+                    `;
+
+                } else {
+
+                    actions = `
+
+                        <button
+                            class="btn"
+                            onclick="suspendUser('${currentUser.id}')"
+                        >
+                            Suspend
+                        </button>
+
+                        <button
+                            class="btn danger"
+                            onclick="deleteUser('${currentUser.id}')"
+                        >
+                            Delete
+                        </button>
+
+                    `;
+
+                }
+
+
+                row.innerHTML = `
+
+                    <td>
+                        ${escapeHTML(
+                            currentUser.name
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            currentUser.email
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            currentUser.role
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            currentUser.status
+                        )}
+                    </td>
+
+                    <td>
+                        ${joined}
+                    </td>
+
+                    <td>
+                        ${actions}
+                    </td>
+
+                `;
+
+
+                table.appendChild(
+                    row
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        table.innerHTML = `
+
+            <tr>
+
+                <td colspan="6">
+
+                    ${escapeHTML(
+                        error.message
+                    )}
+
+                </td>
+
+            </tr>
+
+        `;
+
+    }
+
+}
+
+
+// =====================================
+// SUSPEND
+// =====================================
+
+async function suspendUser(id) {
+
+    const reason =
+        prompt(
+            "Enter the reason for suspending this user:"
+        );
+
+
+    if (reason === null) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/admin/users/${id}/suspend`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json",
+
+                        "x-user-id":
+                            adminId
+                    },
+
+                    body: JSON.stringify({
+                        reason:
+                            reason ||
+                            "Account suspended by administrator."
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message
+            );
+
+        }
+
+
+        alert(
+            "User suspended successfully."
+        );
+
+
+        loadDashboard();
+
+
+    } catch (error) {
+
+        alert(
+            error.message
+        );
+
+    }
+
+}
+
+
+// =====================================
+// ACTIVATE
+// =====================================
+
+async function activateUser(id) {
+
+    if (
+        !confirm(
+            "Activate this user?"
+        )
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/admin/users/${id}/activate`,
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "x-user-id":
+                            adminId
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message
+            );
+
+        }
+
+
+        alert(
+            "User activated successfully."
+        );
+
+
+        loadDashboard();
+
+
+    } catch (error) {
+
+        alert(
+            error.message
+        );
+
+    }
+
+}
+
+
+// =====================================
+// DELETE
+// =====================================
+
+async function deleteUser(id) {
+
+    if (
+        !confirm(
+            "Are you sure you want to permanently delete this user?"
+        )
+    ) {
+        return;
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_URL}/api/admin/users/${id}`,
+                {
+                    method: "DELETE",
+
+                    headers: {
+                        "x-user-id":
+                            adminId
+                    }
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.message
+            );
+
+        }
+
+
+        alert(
+            "User deleted successfully."
+        );
+
+
+        loadDashboard();
+
+
+    } catch (error) {
+
+        alert(
+            error.message
+        );
+
+    }
+
+}
+
+
+// =====================================
+// MESSAGE
+// =====================================
+
+function showMessage(
+    message,
+    type
+) {
+
+    const box =
+        document.getElementById(
+            "message"
+        );
+
+
+    box.textContent =
+        message;
+
+
+    box.className =
+        type;
+
+}
+
+
+// =====================================
+// LOGOUT
+// =====================================
+
+document
+    .getElementById(
+        "logoutBtn"
+    )
+    .addEventListener(
+        "click",
+        function(event) {
+
+            event.preventDefault();
+
+
+            localStorage.removeItem(
+                "jobhubUser"
+            );
+
+            localStorage.removeItem(
+                "jobhubUserId"
+            );
+
+
+            window.location.href =
+                "login.html";
+
+        }
+    );
+
+
+// =====================================
+// START
+// =====================================
+
+loadDashboard();
+
+</script>
+
+
+</body>
+
+</html>

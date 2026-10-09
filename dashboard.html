@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - JobHub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <a href="dashboard.html" class="logo">JobHub</a>
+
+    <div class="nav-links">
+        <a href="jobs.html">Find Jobs</a>
+        <a href="profile.html">Profile</a>
+        <a href="#" onclick="logout()">Logout</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <a href="contact.html">Contact Us</a>
+    </div>
+
+</nav>
+
+<section class="dashboard-header">
+
+    <div class="container">
+
+        <h1 id="welcome">Welcome</h1>
+
+        <p>
+            Manage your JobHub account and activities.
+        </p>
+
+    </div>
+
+</section>
+
+<section class="page">
+
+    <div class="container">
+
+        <div class="dashboard-menu">
+
+            <a href="jobs.html">
+                <h3>Find Jobs</h3>
+                <p>Browse available freelance jobs.</p>
+            </a>
+
+            <a href="create-profile.html" id="postJobLink">
+                <h3>Post a Job</h3>
+                <p>Create a project for freelancers.</p>
+            </a>
+
+            <a href="applications.html">
+                <h3>Applications</h3>
+                <p>View your job applications.</p>
+            </a>
+
+            <a href="profile.html">
+                <h3>My Profile</h3>
+                <p>View your account information.</p>
+            </a>
+
+            <a href="edit-profile.html">
+                <h3>Edit Profile</h3>
+                <p>Update your profile name.</p>
+            </a>
+
+            <a href="message.html">
+                <h3>Messages</h3>
+                <p>View your messages.</p>
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+<footer>
+    <p>© 2026 JobHub. All rights reserved.</p>
+</footer>
+
+<script>
+
+const user = JSON.parse(
+    localStorage.getItem("jobhubUser") || "null"
+);
+
+if (!user) {
+    window.location.href = "login.html";
+}
+
+if (user) {
+    document.getElementById("welcome").textContent =
+        `Welcome, ${user.name}`;
+}
+
+function logout() {
+
+    localStorage.removeItem("jobhubUser");
+    localStorage.removeItem("jobhubUserId");
+
+    window.location.href = "login.html";
+}
+
+</script>
+
+</body>
+</html>

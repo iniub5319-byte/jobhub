@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jobs - JobHub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <a href="index.html" class="logo">JobHub</a>
+
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <a href="contact.html">Contact Us</a>
+    </div>
+
+</nav>
+
+<section class="page">
+
+    <div class="container">
+
+        <div class="page-title">
+            <h1>Available Jobs</h1>
+            <p>Find your next opportunity.</p>
+        </div>
+
+        <div id="jobsContainer" class="jobs-grid">
+            <div class="loading">Loading jobs...</div>
+        </div>
+
+    </div>
+
+</section>
+
+<footer>
+    <p>© 2026 JobHub. All rights reserved.</p>
+</footer>
+
+<script>
+
+const API = "http://localhost:5000";
+
+async function loadJobs() {
+
+    const container = document.getElementById("jobsContainer");
+
+    try {
+
+        const response = await fetch(`${API}/api/jobs`);
+
+        if (!response.ok) {
+            throw new Error("Could not load jobs.");
+        }
+
+        const jobs = await response.json();
+
+        if (!jobs.length) {
+
+            container.innerHTML = `
+                <div class="empty">
+                    <h2>No jobs available</h2>
+                    <p>There are currently no jobs posted.</p>
+                </div>
+            `;
+
+            return;
+        }
+
+        container.innerHTML = jobs.map(job => `
+
+            <div class="job-card">
+
+                <h3>${escapeHTML(job.title)}</h3>
+
+                <p>
+                    ${escapeHTML(job.description)}
+                </p>
+
+                <div class="job-meta">
+                    <span>${escapeHTML(job.category)}</span>
+                    <span>${escapeHTML(job.currency)} ${escapeHTML(String(job.budget))}</span>
+                    <span>${escapeHTML(job.status || "open")}</span>
+                </div>
+
+                <a
+                    href="job.html?id=${job.id}"
+                    class="btn btn-primary"
+                >
+                    View Details
+                </a>
+
+            </div>
+
+        `).join("");
+
+    } catch (error) {
+
+        container.innerHTML = `
+            <div class="message error" style="display:block;">
+                ${error.message}
+            </div>
+        `;
+    }
+}
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+loadJobs();
+
+</script>
+
+</body>
+</html>

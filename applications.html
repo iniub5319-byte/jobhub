@@ -1,0 +1,159 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applications - JobHub</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <a href="dashboard.html" class="logo">JobHub</a>
+
+    <div class="nav-links">
+        <a href="jobs.html">Jobs</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <a href="contact.html">Contact Us</a>
+         <a href="#" onclick="logout()">Logout</a>
+    </div>
+
+</nav>
+
+<section class="page">
+
+    <div class="container">
+
+        <div class="page-title">
+            <h1>My Applications</h1>
+            <p>Track your submitted applications.</p>
+        </div>
+
+        <div id="applicationsContainer">
+            <div class="loading">Loading applications...</div>
+        </div>
+
+    </div>
+
+</section>
+
+<script>
+
+const API = "http://localhost:5000";
+
+const user = JSON.parse(
+    localStorage.getItem("jobhubUser") || "null"
+);
+
+if (!user) {
+    window.location.href = "login.html";
+}
+
+async function loadApplications() {
+
+    const container =
+        document.getElementById("applicationsContainer");
+
+    if (user.role !== "freelancer") {
+
+        container.innerHTML = `
+            <div class="message info" style="display:block;">
+                Applications are available for freelancer accounts.
+            </div>
+        `;
+
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            `${API}/api/applications/freelancer/${encodeURIComponent(user.email)}`
+        );
+
+        const applications = await response.json();
+
+        if (!applications.length) {
+
+            container.innerHTML = `
+                <div class="empty">
+                    <h2>No applications yet</h2>
+                    <p>Find a job and submit your first application.</p>
+
+                    <br>
+
+                    <a href="jobs.html" class="btn btn-primary">
+                        Find Jobs
+                    </a>
+                </div>
+            `;
+
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="grid">
+
+                ${applications.map(app => `
+
+                    <div class="card">
+
+                        <h2>
+                            ${escapeHTML(app.jobTitle || "Job Application")}
+                        </h2>
+
+                        <p>
+                            ${escapeHTML(app.coverLetter)}
+                        </p>
+
+                        <br>
+
+                        <span class="badge badge-active">
+                            ${escapeHTML(app.status || "pending")}
+                        </span>
+
+                    </div>
+
+                `).join("")}
+
+            </div>
+        `;
+
+    } catch (error) {
+
+        container.innerHTML = `
+            <div class="message error" style="display:block;">
+                ${error.message}
+            </div>
+        `;
+    }
+}
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function logout() {
+
+    localStorage.removeItem("jobhubUser");
+    localStorage.removeItem("jobhubUserId");
+
+    window.location.href = "login.html";
+}
+
+loadApplications();
+
+</script>
+
+</body>
+</html>

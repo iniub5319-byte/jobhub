@@ -1,0 +1,126 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JobHub - Find Jobs & Freelancers</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<nav class="navbar">
+    <a href="index.html" class="logo">JobHub</a>
+
+    <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="about.html">About</a>
+        <a href="login.html">Login</a>
+        <a href="terms.html">Terms & Conditions</a>
+        <a href="contact.html">Contact Us</a>
+        <a href="register.html" class="nav-btn">Get Started</a>
+        
+    </div>
+</nav>
+
+<section class="hero">
+    <h1>Find Work. <span>Build Your Future.</span></h1>
+
+    <p>
+        JobHub connects talented freelancers with clients looking
+        for skilled professionals.
+    </p>
+
+    <div class="hero-buttons">
+        <a href="jobs.html" class="btn btn-primary">Find Jobs</a>
+        <a href="register.html" class="btn btn-secondary">Join JobHub</a>
+    </div>
+</section>
+
+<section class="page">
+    <div class="container">
+
+        <div class="page-title">
+            <h1>Latest Jobs</h1>
+            <p>Explore the latest opportunities available on JobHub.</p>
+        </div>
+
+        <div id="jobsContainer" class="jobs-grid">
+            <div class="loading">Loading jobs...</div>
+        </div>
+
+    </div>
+</section>
+
+<footer>
+    <p>© 2026 JobHub. All rights reserved.</p>
+</footer>
+
+<script>
+const API = "http://localhost:5000";
+
+async function loadJobs() {
+    const container = document.getElementById("jobsContainer");
+
+    try {
+        const response = await fetch(`${API}/api/jobs`);
+
+        if (!response.ok) {
+            throw new Error("Failed to load jobs");
+        }
+
+        const jobs = await response.json();
+
+        if (!jobs.length) {
+            container.innerHTML = `
+                <div class="empty">
+                    <h3>No jobs available yet.</h3>
+                    <p>Check back later for new opportunities.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = jobs.slice(0, 6).map(job => `
+            <div class="job-card">
+                <h3>${escapeHTML(job.title)}</h3>
+
+                <p>${escapeHTML(job.description)}</p>
+
+                <div class="job-meta">
+                    <span>${escapeHTML(job.category)}</span>
+                    <span>${escapeHTML(job.currency)} ${escapeHTML(String(job.budget))}</span>
+                    <span>${escapeHTML(job.status || "open")}</span>
+                </div>
+
+                <a href="job.html?id=${job.id}" class="btn btn-primary">
+                    View Job
+                </a>
+            </div>
+        `).join("");
+
+    } catch (error) {
+        container.innerHTML = `
+            <div class="message error" style="display:block;">
+                Unable to load jobs. Make sure the JobHub backend is running.
+            </div>
+        `;
+    }
+}
+
+function escapeHTML(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+loadJobs();
+</script>
+
+</body>
+</html>
